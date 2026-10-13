@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#fff5fa">
+  <title>Sơ đồ tư duy | Hình học</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #25324c;
+      --muted: #71809a;
+      --line: #dce4f1;
+      --paper: #ffffff;
+      --canvas: #f7f8fc;
+      --pink: #ec78ad;
+      --blue: #6389eb;
+      --shadow: 0 14px 40px rgba(59, 76, 119, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 8% 5%, rgba(238, 144, 190, 0.14), transparent 28rem),
+        radial-gradient(ellipse at 92% 14%, rgba(111, 153, 239, 0.12), transparent 26rem),
+        var(--canvas);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .page {
+      width: min(1260px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 34px 0 44px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: #52617b;
+      font-size: 13px;
+      font-weight: 750;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 12px;
+      color: white;
+      background: linear-gradient(145deg, #f08fbd, #678ce9);
+      box-shadow: 0 6px 14px rgba(139, 117, 211, 0.24);
+      font-size: 18px;
+    }
+
+    .top-note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .intro {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      margin: 0 0 9px;
+      color: #d75f9a;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 4vw, 46px);
+      letter-spacing: -0.045em;
+      line-height: 1.08;
+    }
+
+    .intro-copy {
+      max-width: 470px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+
+    .search {
+      position: relative;
+    }
+
+    .search svg {
+      position: absolute;
+      top: 50%;
+      left: 13px;
+      width: 17px;
+      height: 17px;
+      color: #8b97aa;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .search input {
+      width: 235px;
+      height: 42px;
+      padding: 0 14px 0 39px;
+      border: 1px solid #e2e7f0;
+      border-radius: 12px;
+      outline: none;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 13px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .search input:focus {
+      border-color: #e58ab6;
+      box-shadow: 0 0 0 3px rgba(236, 120, 173, 0.13);
+    }
+
+    .reset-button {
+      height: 42px;
+      padding: 0 15px;
+      border: 1px solid #e2e7f0;
+      border-radius: 12px;
+      background: var(--paper);
+      color: #53627d;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      transition: background .2s, border-color .2s;
+    }
+
+    .reset-button:hover { border-color: #e7a6c5; background: #fffafd; }
+
+    .workspace {
+      overflow: hidden;
+      border: 1px solid #e8edf5;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: var(--shadow);
+    }
+
+    .map-scroll {
+      overflow-x: auto;
+      scrollbar-color: #cbd4e4 transparent;
+      scrollbar-width: thin;
+    }
+
+    .map {
+      position: relative;
+      min-width: 980px;
+      padding: 34px 34px 38px;
+      background-image: radial-gradient(#e9eaf2 0.8px, transparent 0.8px);
+      background-position: 13px 13px;
+      background-size: 22px 22px;
+    }
+
+    .connections {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    .connection {
+      fill: none;
+      stroke: #cdd9ee;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2.5;
+    }
+
+    .connection.is-active { stroke: var(--branch-color); stroke-width: 3.5; }
+
+    .central-node {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      width: 210px;
+      min-height: 92px;
+      margin: 0 auto 86px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      border: 1px solid rgba(255, 255, 255, .75);
+      border-radius: 22px;
+      background: linear-gradient(120deg, #ed83b4, #7198ed);
+      box-shadow: 0 12px 27px rgba(126, 123, 202, .25);
+      color: #fff;
+    }
+
+    .central-node .central-icon { font-size: 21px; }
+    .central-node strong { font-size: 18px; letter-spacing: .07em; }
+    .central-node span:last-child { color: rgba(255,255,255,.86); font-size: 11px; }
+
+    .tree-groups {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(250px, 1fr));
+      align-items: start;
+      gap: 22px;
+    }
+
+    .tree-group {
+      min-width: 0;
+      padding: 16px;
+      border: 1px solid #e7e9f1;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .91);
+      box-shadow: 0 8px 22px rgba(37, 52, 83, .055);
+    }
+
+    .tree-group[hidden] { display: none; }
+
+    .group-node {
+      display: flex;
+      min-height: 52px;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 9px 12px;
+      border: 1px solid color-mix(in srgb, var(--group-color) 33%, white);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--group-color) 9%, white);
+      color: #34415a;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .group-icon {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--group-color) 20%, white);
+      font-size: 16px;
+    }
+
+    .topic-list {
+      display: grid;
+      gap: 9px;
+      padding-left: 17px;
+      border-left: 2px solid color-mix(in srgb, var(--group-color) 25%, #edf0f6);
+    }
+
+    .topic-node {
+      position: relative;
+      width: 100%;
+      min-height: 68px;
+      padding: 11px 12px;
+      border: 1px solid #e8ebf2;
+      border-left: 3px solid var(--branch-color);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(37, 52, 83, .04);
+      cursor: pointer;
+      text-align: left;
+      transition: transform .18s, box-shadow .18s, border-color .18s;
+    }
+
+    .topic-node::before {
+      position: absolute;
+      top: 50%;
+      left: -19px;
+      width: 16px;
+      height: 2px;
+      background: color-mix(in srgb, var(--group-color) 35%, #edf0f6);
+      content: "";
+    }
+
+    .topic-node:hover {
+      transform: translateX(3px);
+      box-shadow: 0 8px 17px rgba(37, 52, 83, .09);
+    }
+
+    .topic-node.is-active {
+      border-color: var(--branch-color);
+      box-shadow: 0 5px 16px color-mix(in srgb, var(--branch-color) 18%, transparent);
+    }
+
+    .topic-node[hidden] { display: none; }
+
+    .topic-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+
+    .topic-icon {
+      display: grid;
+      width: 27px;
+      height: 27px;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 9px;
+      background: color-mix(in srgb, var(--branch-color) 13%, white);
+      font-size: 14px;
+    }
+
+    .topic-title { font-size: 13px; font-weight: 800; line-height: 1.25; }
+    .topic-items { display: flex; flex-wrap: wrap; gap: 5px; padding-left: 35px; }
+
+    .topic-items span {
+      padding: 4px 7px;
+      border-radius: 7px;
+      background: #f4f6fa;
+      color: #63718a;
+      font-size: 10px;
+      line-height: 1.1;
+    }
+
+    .detail {
+      display: grid;
+      grid-template-columns: minmax(180px, .85fr) minmax(0, 2fr);
+      gap: 25px;
+      padding: 24px 29px 27px;
+      border-top: 1px solid #edf0f6;
+      background: #fff;
+    }
+
+    .detail-label {
+      margin: 2px 0 8px;
+      color: #8290a7;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .detail h2 {
+      margin: 0;
+      font-size: 21px;
+      letter-spacing: -.025em;
+    }
+
+    .detail-content {
+      color: #63718a;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .detail-content p { margin: 0 0 9px; }
+    .detail-content p:last-child { margin-bottom: 0; }
+    .detail-content strong { color: #34415a; }
+
+    .empty-state {
+      display: none;
+      position: absolute;
+      z-index: 3;
+      top: 50%;
+      left: 50%;
+      padding: 14px 18px;
+      border: 1px solid #e7ebf3;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      color: #67758d;
+      font-size: 13px;
+      transform: translate(-50%, -50%);
+    }
+
+    .empty-state.visible { display: block; }
+
+    .footer-note {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 15px;
+      color: #8995a9;
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 30px, 600px); padding-top: 22px; }
+      .topbar { margin-bottom: 23px; }
+      .top-note { display: none; }
+      .intro { align-items: stretch; flex-direction: column; gap: 17px; }
+      .intro-copy { font-size: 14px; }
+      .toolbar { width: 100%; }
+      .search { flex: 1; }
+      .search input { width: 100%; }
+      .workspace { border-radius: 17px; }
+      .map { min-width: 920px; padding: 28px 22px 30px; }
+      .central-node { margin-bottom: 72px; }
+      .tree-groups { grid-template-columns: repeat(3, minmax(255px, 1fr)); gap: 14px; }
+      .tree-group { padding: 12px; }
+      .detail { grid-template-columns: 1fr; gap: 11px; padding: 21px; }
+      .footer-note { flex-direction: column; gap: 5px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">∠</span> Góc học tập</div>
+      <div class="top-note">Học trực quan · Ghi nhớ dễ dàng</div>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Bản đồ kiến thức</p>
+        <h1 id="page-title">Khám phá hình học</h1>
+        <p class="intro-copy">Sơ đồ cây sắp xếp kiến thức từ chủ đề chính đến từng nhóm và chủ đề con. Chọn một nút để xem nội dung chi tiết.</p>
+      </div>
+      <div class="toolbar">
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg>
+          <input id="searchInput" type="search" placeholder="Tìm chủ đề..." aria-label="Tìm chủ đề hình học">
+        </label>
+        <button class="reset-button" id="resetButton" type="button">Đặt lại</button>
+      </div>
+    </section>
+
+    <section class="workspace" aria-label="Sơ đồ cây kiến thức hình học">
+      <div class="map-scroll">
+        <div class="map" id="mindMap">
+          <svg class="connections" id="connections" aria-hidden="true"></svg>
+          <div class="central-node" id="centralNode">
+            <span class="central-icon" aria-hidden="true">△</span>
+            <strong>HÌNH HỌC</strong>
+            <span>Chủ đề chính</span>
+          </div>
+          <div class="tree-groups" id="treeGroups"></div>
+          <div class="empty-state" id="emptyState">Không tìm thấy chủ đề phù hợp.</div>
+        </div>
+      </div>
+      <section class="detail" id="detailPanel" aria-live="polite">
+        <div>
+          <p class="detail-label">Đang tìm hiểu</p>
+          <h2 id="detailTitle">Chọn một chủ đề</h2>
+        </div>
+        <div class="detail-content" id="detailContent">
+          <p>Chọn một chủ đề con trên sơ đồ cây để xem định nghĩa, tính chất và công thức cần nhớ.</p>
+        </div>
+      </section>
+    </section>
+
+    <footer class="footer-note">
+      <span>Mẹo: dùng ô tìm kiếm để làm nổi bật chủ đề bạn cần ôn tập.</span>
+      <span>Chủ đề chính → Nhóm kiến thức → Chủ đề con</span>
+    </footer>
+  </main>
+
+  <script>
+    const groups = [
+      { id: "flat", title: "Hình học phẳng", icon: "📐", color: "#e979ad", topicIds: ["plane", "triangle", "quadrilateral", "circle"] },
+      { id: "space", title: "Hình học không gian", icon: "🧊", color: "#6389eb", topicIds: ["solid"] },
+      { id: "measure", title: "Đo lường", icon: "✳", color: "#e979ad", topicIds: ["measurement"] }
+    ];
+
+    const topics = [
+      {
+        id: "plane", group: "flat", icon: "📐", color: "#e979ad",
+        title: "Khái niệm cơ bản", items: ["Điểm & đường thẳng", "Góc", "Đa giác"],
+        details: [
+          ["Điểm, đường thẳng, đoạn thẳng", "Là những khái niệm cơ bản để mô tả vị trí và hình dạng trên một mặt phẳng."],
+          ["Góc", "Được tạo bởi hai tia chung gốc. Góc nhọn < 90°, góc vuông = 90°, góc tù nằm giữa 90° và 180°."],
+          ["Đa giác", "Hình phẳng khép kín gồm các đoạn thẳng; tổng số đo các góc trong là (n − 2) × 180°."]
+        ]
+      },
+      {
+        id: "triangle", group: "flat", icon: "🔺", color: "#6389eb",
+        title: "Tam giác", items: ["3 cạnh · 3 góc", "Đường cao", "Đồng dạng"],
+        details: [
+          ["Tổng ba góc", "Tổng số đo ba góc trong mọi tam giác bằng 180°."],
+          ["Diện tích", "S = (đáy × chiều cao) / 2. Đường cao vuông góc với cạnh đáy hoặc phần kéo dài của cạnh ấy."],
+          ["Tam giác đồng dạng", "Các góc tương ứng bằng nhau và các cạnh tương ứng tỉ lệ. Có thể nhận biết qua góc–góc, cạnh–góc–cạnh hoặc cạnh–cạnh–cạnh."]
+        ]
+      },
+      {
+        id: "quadrilateral", group: "flat", icon: "▱", color: "#e979ad",
+        title: "Tứ giác", items: ["Hình bình hành", "Hình chữ nhật", "Hình thang"],
+        details: [
+          ["Tổng bốn góc", "Tổng số đo các góc trong một tứ giác bằng 360°."],
+          ["Hình bình hành", "Các cạnh đối song song và bằng nhau; hai đường chéo cắt nhau tại trung điểm mỗi đường."],
+          ["Diện tích thường gặp", "Hình chữ nhật: S = dài × rộng. Hình thang: S = (đáy lớn + đáy bé) × chiều cao / 2."]
+        ]
+      },
+      {
+        id: "circle", group: "flat", icon: "◉", color: "#6389eb",
+        title: "Đường tròn", items: ["Bán kính & đường kính", "Chu vi", "Diện tích"],
+        details: [
+          ["Bán kính và đường kính", "Bán kính r nối tâm với một điểm trên đường tròn. Đường kính d = 2r."],
+          ["Chu vi", "C = 2πr = πd."],
+          ["Diện tích hình tròn", "S = πr². Khi tính gần đúng, thường lấy π ≈ 3,14."]
+        ]
+      },
+      {
+        id: "solid", group: "space", icon: "🧊", color: "#6389eb",
+        title: "Hình khối", items: ["Lập phương", "Lăng trụ", "Hình trụ"],
+        details: [
+          ["Hình lập phương", "Có 6 mặt vuông bằng nhau, 12 cạnh bằng nhau. Thể tích V = a³; diện tích toàn phần S = 6a²."],
+          ["Hình hộp chữ nhật", "Thể tích V = dài × rộng × cao; diện tích toàn phần S = 2(ab + bc + ca)."],
+          ["Hình trụ", "Thể tích V = πr²h; diện tích xung quanh Sxq = 2πrh."]
+        ]
+      },
+      {
+        id: "measurement", group: "measure", icon: "✳", color: "#e979ad",
+        title: "Công thức đo lường", items: ["Chu vi", "Diện tích", "Thể tích"],
+        details: [
+          ["Chu vi", "Độ dài đường bao quanh một hình. Cộng độ dài các cạnh hoặc dùng công thức riêng của hình."],
+          ["Diện tích", "Đo phần mặt phẳng được hình bao phủ; luôn ghi đơn vị vuông như cm², m²."],
+          ["Thể tích", "Đo phần không gian một vật chiếm; ghi đơn vị khối như cm³, m³."]
+        ]
+      }
+    ];
+
+    const map = document.getElementById("mindMap");
+    const svg = document.getElementById("connections");
+    const searchInput = document.getElementById("searchInput");
+    const detailTitle = document.getElementById("detailTitle");
+    const detailContent = document.getElementById("detailContent");
+    const emptyState = document.getElementById("emptyState");
+    const groupsContainer = document.getElementById("treeGroups");
+    const nodes = new Map();
+    const groupNodes = new Map();
+    let selectedId = null;
+
+    function createTree() {
+      groups.forEach((group) => {
+        const section = document.createElement("section");
+        section.className = "tree-group";
+        section.dataset.group = group.id;
+        section.style.setProperty("--group-color", group.color);
+        section.setAttribute("aria-label", group.title);
+
+        const heading = document.createElement("div");
+        heading.className = "group-node";
+        heading.dataset.groupHeading = group.id;
+        const icon = document.createElement("span");
+        icon.className = "group-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = group.icon;
+        const title = document.createElement("span");
+        title.textContent = group.title;
+        heading.append(icon, title);
+
+        const list = document.createElement("div");
+        list.className = "topic-list";
+        group.topicIds.forEach((topicId) => {
+          const topic = topics.find((entry) => entry.id === topicId);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "topic-node";
+          button.dataset.id = topic.id;
+          button.style.setProperty("--branch-color", topic.color);
+          button.style.setProperty("--group-color", group.color);
+          button.setAttribute("aria-label", `${topic.title}: ${topic.items.join(", ")}`);
+
+          const topicHeading = document.createElement("span");
+          topicHeading.className = "topic-heading";
+          const topicIcon = document.createElement("span");
+          topicIcon.className = "topic-icon";
+          topicIcon.setAttribute("aria-hidden", "true");
+          topicIcon.textContent = topic.icon;
+          const topicTitle = document.createElement("span");
+          topicTitle.className = "topic-title";
+          topicTitle.textContent = topic.title;
+          topicHeading.append(topicIcon, topicTitle);
+
+          const items = document.createElement("span");
+          items.className = "topic-items";
+          topic.items.forEach((item) => {
+            const chip = document.createElement("span");
+            chip.textContent = item;
+            items.append(chip);
+          });
+
+          button.append(topicHeading, items);
+          button.addEventListener("click", () => selectTopic(topic.id));
+          list.append(button);
+          nodes.set(topic.id, button);
+        });
+
+        section.append(heading, list);
+        groupsContainer.append(section);
+        groupNodes.set(group.id, section);
+      });
+    }
+
+    function selectTopic(id) {
+      const topic = topics.find((entry) => entry.id === id);
+      if (!topic) return;
+      selectedId = id;
+      detailTitle.textContent = topic.title;
+      detailContent.replaceChildren();
+      topic.details.forEach(([heading, description]) => {
+        const paragraph = document.createElement("p");
+        const strong = document.createElement("strong");
+        strong.textContent = `${heading}: `;
+        paragraph.append(strong, document.createTextNode(description));
+        detailContent.append(paragraph);
+      });
+      updateTree();
+    }
+
+    function drawConnections() {
+      const mapRect = map.getBoundingClientRect();
+      const centerRect = document.getElementById("centralNode").getBoundingClientRect();
+      const visibleGroups = groups.filter((group) => !groupNodes.get(group.id).hidden);
+      svg.setAttribute("viewBox", `0 0 ${map.clientWidth} ${map.clientHeight}`);
+      svg.replaceChildren();
+      if (visibleGroups.length === 0) return;
+
+      const rootX = centerRect.left + centerRect.width / 2 - mapRect.left;
+      const rootY = centerRect.bottom - mapRect.top;
+      const groupPoints = visibleGroups.map((group) => {
+        const headingRect = groupNodes.get(group.id).querySelector(".group-node").getBoundingClientRect();
+        return {
+          group,
+          x: headingRect.left + headingRect.width / 2 - mapRect.left,
+          y: headingRect.top - mapRect.top
+        };
+      });
+      const junctionY = rootY + Math.max(22, (groupPoints[0].y - rootY) * 0.48);
+      const mainPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      mainPath.setAttribute("d", `M ${rootX} ${rootY} V ${junctionY} M ${groupPoints[0].x} ${junctionY} H ${groupPoints[groupPoints.length - 1].x}`);
+      mainPath.classList.add("connection");
+      mainPath.style.setProperty("--branch-color", "#8b9fe5");
+      svg.append(mainPath);
+
+      groupPoints.forEach(({ group, x, y }) => {
+        const groupPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        groupPath.setAttribute("d", `M ${x} ${junctionY} V ${y}`);
+        groupPath.classList.add("connection");
+        groupPath.dataset.groupPath = group.id;
+        groupPath.style.setProperty("--branch-color", group.color);
+        svg.append(groupPath);
+      });
+    }
+
+    function updateTree() {
+      const query = searchInput.value.trim().toLocaleLowerCase("vi");
+      let visibleCount = 0;
+
+      topics.forEach((topic) => {
+        const node = nodes.get(topic.id);
+        const groupTitle = groups.find((group) => group.id === topic.group).title;
+        const searchableText = `${groupTitle} ${topic.title} ${topic.items.join(" ")} ${topic.details.flat().join(" ")}`;
+        const matches = !query || searchableText.toLocaleLowerCase("vi").includes(query);
+        node.hidden = !matches;
+        node.classList.toggle("is-active", topic.id === selectedId);
+        visibleCount += Number(matches);
+      });
+
+      groups.forEach((group) => {
+        const hasVisibleTopic = group.topicIds.some((id) => !nodes.get(id).hidden);
+        groupNodes.get(group.id).hidden = !hasVisibleTopic;
+      });
+
+      emptyState.classList.toggle("visible", visibleCount === 0);
+      drawConnections();
+    }
+
+    searchInput.addEventListener("input", updateTree);
+    document.getElementById("resetButton").addEventListener("click", () => {
+      searchInput.value = "";
+      updateTree();
+      if (selectedId) selectTopic(selectedId);
+    });
+    window.addEventListener("resize", drawConnections);
+
+    createTree();
+    updateTree();
+    selectTopic(topics[0].id);
+  </script>
+</body>
+</html>
